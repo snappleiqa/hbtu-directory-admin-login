@@ -118,9 +118,12 @@
       useRefreshTokens: true
     });
 
-    // Handle the redirect back from Auth0 after login
+    // Handle the redirect back from Auth0 after login.
+    // We only check for "code" here — we build the login URL ourselves
+    // (not via the SDK helper), so no "state" param is sent, and Auth0
+    // won't echo one back either.
     const query = window.location.search;
-    if (query.includes("code=") && query.includes("state=")) {
+    if (query.includes("code=")) {
       await auth0Client.handleRedirectCallback();
       window.history.replaceState({}, document.title, REDIRECT_URI);
     }
@@ -180,6 +183,9 @@
 
   initAuth0();
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
