@@ -118,12 +118,9 @@
       useRefreshTokens: true
     });
 
-    // Handle the redirect back from Auth0 after login.
-    // We only check for "code" here — we build the login URL ourselves
-    // (not via the SDK helper), so no "state" param is sent, and Auth0
-    // won't echo one back either.
+    // Handle the redirect back from Auth0 after login
     const query = window.location.search;
-    if (query.includes("code=")) {
+    if (query.includes("code=") && query.includes("state=")) {
       await auth0Client.handleRedirectCallback();
       window.history.replaceState({}, document.title, REDIRECT_URI);
     }
@@ -162,31 +159,23 @@
   }
 
   loginBtn.addEventListener("click", () => {
-    // This page is opened directly (not embedded in Sites), so a normal
-    // same-tab redirect works — no frame-escaping tricks needed.
-    const authorizeUrl =
-      "https://" + AUTH0_DOMAIN +
-      "/authorize?client_id=" + AUTH0_CLIENT_ID +
-      "&response_type=code" +
-      "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
-      "&scope=" + encodeURIComponent("openid profile email");
-    window.location.href = authorizeUrl;
+    // This page is opened directly (not embedded), so the SDK's own
+    // loginWithRedirect() works correctly — it handles state/security
+    // values itself, avoiding the "Invalid state" error that happens
+    // when building the login URL manually.
+    auth0Client.loginWithRedirect();
   });
 
   logoutBtn.addEventListener("click", () => {
-    const logoutUrl =
-      "https://" + AUTH0_DOMAIN +
-      "/v2/logout?client_id=" + AUTH0_CLIENT_ID +
-      "&returnTo=" + encodeURIComponent(REDIRECT_URI);
-    window.location.href = logoutUrl;
+    auth0Client.logout({
+      logoutParams: {
+        returnTo: REDIRECT_URI
+      }
+    });
   });
 
   initAuth0();
 </script>
 
 </body>
-</html>
-
-</body>
-</html>
 </html>
