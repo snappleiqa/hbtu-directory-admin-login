@@ -81,16 +81,9 @@
 
   <div id="status">Checking session…</div>
 
-  <div id="private-content">
-    <!-- Replace YOUR_SHEET_ID_HERE with your actual Google Sheet's ID
-         (found in the Sheet's URL between /d/ and /edit).
-         The Sheet must be set to "Publish to web" for this to load. -->
-    <iframe
-      src="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/pubhtml?widget=true&headers=false"
-      style="width: 100%; height: 500px; border: 1px solid var(--border); border-radius: 8px;"
-      title="Private data">
-    </iframe>
-  </div>
+  <a id="site-link" href="#" class="hidden" style="display:block; margin-top:16px; text-align:center;">Go to Direktori Pegawai On-Call →</a>
+
+  <div id="private-content"></div>
 </div>
 
 <script>
@@ -98,8 +91,8 @@
   // CONFIG — replace these three values with your own Auth0 app details
   // Find them in Auth0 Dashboard → Applications → your app → Settings
   // ----------------------------------------------------------------
-  const AUTH0_DOMAIN = "dev-c4csvsy0qdcgpchx.us.auth0.com";
-  const AUTH0_CLIENT_ID = "hIqYmrFslltXL9pirAHG4d3Q7Za52ajq";
+  const AUTH0_DOMAIN = "YOUR_DOMAIN.auth0.com";
+  const AUTH0_CLIENT_ID = "YOUR_CLIENT_ID";
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const GOOGLE_SITES_PRIVATE_PAGE = "https://sites.google.com/moh.gov.my/ukphbtu/direktori-pegawai-on-call";
 
@@ -112,7 +105,7 @@
   const loginBtn = document.getElementById("login-btn");
   const logoutBtn = document.getElementById("logout-btn");
   const statusEl = document.getElementById("status");
-  const privateContent = document.getElementById("private-content");
+  const siteLink = document.getElementById("site-link");
 
   async function initAuth0() {
     auth0Client = await auth0.createAuth0Client({
@@ -147,59 +140,47 @@
 
       if (isAllowed) {
         statusEl.textContent = "Signed in as " + userProfile.email;
-        privateContent.style.display = "block";
+        siteLink.href = GOOGLE_SITES_PRIVATE_PAGE;
+        siteLink.classList.remove("hidden");
         loginBtn.classList.add("hidden");
         logoutBtn.classList.remove("hidden");
-
-        // Login succeeded — forward to the actual Google Sites private page
-        // after a brief pause so the person sees confirmation first.
-        statusEl.textContent = "Signed in. Redirecting…";
-        setTimeout(() => {
-          window.top.location.href = GOOGLE_SITES_PRIVATE_PAGE;
-        }, 1000);
       } else {
         statusEl.textContent = "This account does not have access.";
-        privateContent.style.display = "none";
+        siteLink.classList.add("hidden");
         loginBtn.classList.add("hidden");
         logoutBtn.classList.remove("hidden");
       }
     } else {
       statusEl.textContent = "Not signed in.";
-      privateContent.style.display = "none";
+      siteLink.classList.add("hidden");
       loginBtn.classList.remove("hidden");
       logoutBtn.classList.add("hidden");
     }
   }
 
   loginBtn.addEventListener("click", () => {
-    // Auth0's hosted login page refuses to render inside an iframe
-    // (Google Sites embeds this page in an iframe), so instead of
-    // letting the SDK redirect the iframe itself, we build the
-    // authorize URL by hand and navigate the TOP-LEVEL tab to it —
-    // not a new tab, the same browser tab, just breaking out of the frame.
+    // This page is opened directly (not embedded in Sites), so a normal
+    // same-tab redirect works — no frame-escaping tricks needed.
     const authorizeUrl =
       "https://" + AUTH0_DOMAIN +
       "/authorize?client_id=" + AUTH0_CLIENT_ID +
       "&response_type=code" +
       "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
       "&scope=" + encodeURIComponent("openid profile email");
-    window.top.location.href = authorizeUrl;
+    window.location.href = authorizeUrl;
   });
 
   logoutBtn.addEventListener("click", () => {
-    // Same reasoning for logout: build the logout URL and navigate
-    // the top-level tab instead of the iframe.
     const logoutUrl =
       "https://" + AUTH0_DOMAIN +
       "/v2/logout?client_id=" + AUTH0_CLIENT_ID +
       "&returnTo=" + encodeURIComponent(REDIRECT_URI);
-    window.top.location.href = logoutUrl;
+    window.location.href = logoutUrl;
   });
 
-  // If we're loaded inside an iframe AND we're not in the middle of
-  // an Auth0 redirect callback, this detects that case on page load.
   initAuth0();
 </script>
 
 </body>
+</html>
 </html>
